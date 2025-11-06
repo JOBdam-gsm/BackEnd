@@ -1,9 +1,11 @@
-package com.example.how_do_crud.domain.user.dto;
+package com.example.how_do_crud.domain.user.dto.request;
 
-public class UserDTO {
-    Long id;
-    String email;
-    String password;
+public class UserIdDTO {
+    private Long id;
+
+//    @Email()
+    private String email;
+    private String password;
 
     public Long getId(){
         return id;

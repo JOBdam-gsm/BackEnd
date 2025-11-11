@@ -16,9 +16,11 @@ public class JwtProvider {
 
     private String secretKey = env.get("KEY"); // 환경변수에서 key 값 가져오기
     private final Long accessTokenValidity; // 1000 당 1초 즉, 30분
+    private final Long refreshTokenValidity; // Refresh Token: 7일
 
     public JwtProvider() {
         accessTokenValidity = 1000L * 60 * 30;
+        refreshTokenValidity = 1000L * 60 * 60 * 24 * 7;
     }
 
     @PostConstruct
@@ -43,6 +45,21 @@ public class JwtProvider {
                 .compact();
     }
 
+    public String createRefreshToken(String username) {
+        Claims claims = Jwts.claims()
+                .setSubject(username); // 역할 필요 X
+
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + refreshTokenValidity);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -51,6 +68,8 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
+            return false;
+        } catch (Exception e) {
             return false;
         }
     }

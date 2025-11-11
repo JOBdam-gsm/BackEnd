@@ -3,11 +3,14 @@ package com.example.how_do_crud.domain.auth.controller;
 import com.example.how_do_crud.domain.auth.dto.LoginInfoDTO;
 import com.example.how_do_crud.domain.auth.dto.SignUpDTO;
 import com.example.how_do_crud.domain.auth.JwtProvider;
+import com.example.how_do_crud.domain.auth.dto.TokenResponseDTO;
 import com.example.how_do_crud.domain.user.dto.request.UserInfoDTO;
 import com.example.how_do_crud.domain.user.entity.User;
 import com.example.how_do_crud.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,16 +36,44 @@ public class AuthContoller {
         userService.createUser(
                 new UserInfoDTO(user.getEmail(), password, user.getRoles()));
         return new ResponseEntity<>(
-                new UserInfoDTO(user.getEmail(), password, user.getRoles()), HttpStatus.OK);
+                new UserInfoDTO(user.getEmail(), password, user.getRoles()), HttpStatus.CREATED);
     }
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginInfoDTO login){
+    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginInfoDTO login){
         UserDetails userDetails = userService.readUser(login.email());
+
+        String accessToken = jwtProvider.creatToken(
+                userDetails.getUsername(), userDetails.getAuthorities());
+        String refreshToken = jwtProvider.createRefreshToken(userDetails.getUsername());
 
        if(passwordEncoder.matches(login.password(), userDetails.getPassword())){
            return new ResponseEntity<>(
-                   jwtProvider.creatToken(userDetails.getUsername(), userDetails.getAuthorities()), HttpStatus.OK);
+                   TokenResponseDTO.builder()
+                           .accessToken(accessToken)
+                           .refreshToken(refreshToken)
+                           .build()
+                   ,HttpStatus.OK);
        }
-       return new ResponseEntity<>(HttpStatus.FORBIDDEN);//sdfghjk
+       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponseDTO> refreshToken(@RequestBody String refreshToken){
+        if(refreshToken == null && jwtProvider.validateToken(refreshToken)){ // accessToken 이 유효하지 않을때
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        String username = jwtProvider.getUsername(refreshToken);
+        UserDetails userDetails = userService.readUser(username);
+
+        String accessToken = jwtProvider.creatToken(
+                userDetails.getUsername(),
+                userDetails.getAuthorities()
+        );
+        return new ResponseEntity<>(
+                TokenResponseDTO.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build()
+                ,HttpStatus.OK);
     }
 }

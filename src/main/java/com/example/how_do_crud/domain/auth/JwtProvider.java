@@ -2,7 +2,11 @@ package com.example.how_do_crud.domain.auth;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +15,10 @@ import java.util.*;
 import static java.lang.System.getenv;
 
 @Component
+@Slf4j
 public class JwtProvider {
+    private final Logger logger = LoggerFactory.getLogger(JwtProvider.class.getName());
+
     Map<String, String> env = getenv();
 
     private String secretKey = env.get("KEY"); // 환경변수에서 key 값 가져오기
@@ -29,13 +36,9 @@ public class JwtProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    public String creatToken(String username, Collection<? extends GrantedAuthority> roles){
-        Claims claims = Jwts.claims() // jwt 내부 본문에 들어갈거
-                .setSubject(username);
-        claims.put("roles", roles);
-
+    public String createToken(Claims claims, Long tokenValidity){
         Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenValidity);
+        Date validity = new Date(now.getTime() + tokenValidity);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -45,19 +48,17 @@ public class JwtProvider {
                 .compact();
     }
 
+    public String createAccessToken(String username, Collection<? extends GrantedAuthority> roles){
+        Claims claims = Jwts.claims() // jwt 내부 본문에 들어갈거
+                .setSubject(username);
+        claims.put("roles", roles);
+        return createToken(claims, accessTokenValidity);
+    }
+
     public String createRefreshToken(String username) {
         Claims claims = Jwts.claims()
-                .setSubject(username); // 역할 필요 X
-
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshTokenValidity);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), SignatureAlgorithm.HS256)
-                .compact();
+                .setSubject(username);
+        return createToken(claims, refreshTokenValidity);
     }
 
     public boolean validateToken(String token) {
@@ -68,8 +69,16 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
+            logger.warn("토큰 만료됨");
             return false;
-        } catch (Exception e) {
+        } catch (MalformedJwtException e) {
+            logger.warn("토큰 형식 오류");
+            return false;
+        } catch (UnsupportedJwtException e){
+            logger.warn("지원하지 않는 JWT");
+            return false;
+        } catch (SignatureException e){
+            logger.warn("JWT 서명 불일치");
             return false;
         }
     }

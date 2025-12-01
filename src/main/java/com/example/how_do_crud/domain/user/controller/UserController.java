@@ -6,6 +6,7 @@ import com.example.how_do_crud.domain.user.dto.request.UserInfoDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,12 +22,12 @@ public class UserController {
     }
 
     @GetMapping("/read/{id}")
-    public ResponseEntity<UserInfoDTO> readUser (@PathVariable("id") Long id){
+    public ResponseEntity<UserDetails> readUser (@PathVariable("id") Long id){
         return new ResponseEntity<>(userService.readUser(id), HttpStatus.OK);
     }
 
     @PutMapping("/update")
-    public void deleteUser (@RequestBody UserIdDTO dto){
+    public void updateUser(@RequestBody UserIdDTO dto){
         userService.updateUser(dto.getId(), dto);
     }
 
@@ -34,5 +35,10 @@ public class UserController {
     public ResponseEntity<Void> deleteUser (@PathVariable("id") Long id){
         userService.deleteUser(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @DeleteMapping
+    public void logout(){
+
     }
 }

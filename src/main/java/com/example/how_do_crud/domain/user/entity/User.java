@@ -18,6 +18,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(nullable = false, unique = true) // null 안되고 중복 X
     private String email;
 
@@ -35,9 +38,10 @@ public class User {
         this.roles = roles;
     }
     public User(SignUpDTO dto){
-        this.email = dto.getEmail();
-        this.password = dto.getPassword();
-        setRoles(dto.getRoles());
+        this.name = dto.name();
+        this.email = dto.email();
+        this.password = dto.password();
+        setRoles(dto.role());
     }
 
     public String getEmail(){
@@ -49,6 +53,7 @@ public class User {
     public List<String> getRoles(){
         return roles;
     }
+    public String getName() {return name;}
 
     public void setEmail(String email) {
         this.email = email;

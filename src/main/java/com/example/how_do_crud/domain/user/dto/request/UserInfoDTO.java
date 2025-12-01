@@ -1,25 +1,29 @@
 package com.example.how_do_crud.domain.user.dto.request;
 
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserInfoDTO {
-    private String email;
+    private final String email;
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> roles;
+    @Enumerated(EnumType.STRING)
+    private List<String> roles = new ArrayList<>();
 
-    public UserInfoDTO(String email, String password){
-        this.email = email;
-        this.password = password;
-    }
     public UserInfoDTO(String email, String password, List<String> roles){
         this.email = email;
         this.password = password;
         this.roles = roles;
+    }
+    public UserInfoDTO(String email, List<String> roles){
+        this.email = email;
+        this.roles.addAll(roles);
     }
 
     public String getEmail() {

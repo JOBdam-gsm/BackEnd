@@ -19,10 +19,10 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public UserInfoDTO readUser(Long id){
+    public UserDetails readUser(Long id){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(""));
-        return new UserInfoDTO(user.getEmail(), user.getPassword());
+        return new CustomUserDetails(user);
     }
     public UserDetails readUser(String name){
         User user = userRepository.findByEmail(name)

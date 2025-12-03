@@ -1,7 +1,9 @@
 package com.example.how_do_crud.domain.user.service;
 
+import com.example.how_do_crud.domain.user.dto.request.UserCreateReq;
 import com.example.how_do_crud.domain.user.dto.request.UserInfoDTO;
 import com.example.how_do_crud.domain.user.dto.request.UserIdDTO;
+import com.example.how_do_crud.domain.user.dto.request.UserUpdateReq;
 import com.example.how_do_crud.domain.user.entity.CustomUserDetails;
 import com.example.how_do_crud.domain.user.entity.User;
 import com.example.how_do_crud.domain.user.repository.UserRepository;
@@ -14,8 +16,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
-    public void createUser(UserInfoDTO dto){
-        User user = new User(dto.getEmail(), dto.getPassword(), dto.getRoles());
+    public void createUser(User user){
         userRepository.save(user);
     }
 
@@ -30,12 +31,10 @@ public class UserService {
         return new CustomUserDetails(user);
     }
 
-    public void updateUser(Long id, UserIdDTO dto){
-        User user = userRepository.findById(id)
+    public void updateUser(UserUpdateReq request){
+        User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException(""));
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
-        userRepository.save(user);
+        user.update(request);
     }
 
     public void deleteUser(Long id){

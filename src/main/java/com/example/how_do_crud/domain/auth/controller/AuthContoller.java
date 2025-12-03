@@ -1,11 +1,10 @@
 package com.example.how_do_crud.domain.auth.controller;
 
-import com.example.how_do_crud.domain.auth.dto.LoginInfoDTO;
+import com.example.how_do_crud.domain.auth.dto.request.LoginReq;
 import com.example.how_do_crud.domain.auth.dto.RefreshTokenDTO;
-import com.example.how_do_crud.domain.auth.dto.SignUpDTO;
+import com.example.how_do_crud.domain.auth.dto.request.SignUpReq;
 import com.example.how_do_crud.domain.auth.JwtProvider;
 import com.example.how_do_crud.domain.auth.dto.TokenResponseDTO;
-import com.example.how_do_crud.domain.user.dto.request.UserInfoDTO;
 import com.example.how_do_crud.domain.user.entity.User;
 import com.example.how_do_crud.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -27,25 +26,25 @@ public class AuthContoller {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<UserInfoDTO> signUp(@RequestBody SignUpDTO signUp){
-        User user = new User(signUp); // 역할은 따로 프론트에서 같이 보내는 식으로
-
-        String password = passwordEncoder.encode(signUp.password());
-
-        userService.createUser(
-                new UserInfoDTO(user.getEmail(), password, user.getRoles()));
-        return new ResponseEntity<>(
-                new UserInfoDTO(user.getEmail(), user.getRoles()), HttpStatus.CREATED);
+    public ResponseEntity<HttpStatus > signUp(@RequestBody SignUpReq request){
+        User user = User.builder()
+                .name(request.name())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .roles(request.roles())
+                .build();
+        userService.createUser(user);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginInfoDTO login){
+    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginReq login){
         UserDetails userDetails = userService.readUser(login.email());
 
-        String accessToken = jwtProvider.createAccessToken(
-                userDetails.getUsername(), userDetails.getAuthorities());
-        String refreshToken = jwtProvider.createRefreshToken(userDetails.getUsername());
-
         if(passwordEncoder.matches(login.password(), userDetails.getPassword())){
+            String accessToken = jwtProvider.createAccessToken(
+                    userDetails.getUsername(), userDetails.getAuthorities());
+            String refreshToken = jwtProvider.createRefreshToken(userDetails.getUsername());
+
             return new ResponseEntity<>(
                     TokenResponseDTO.builder()
                             .accessToken(accessToken)
@@ -54,10 +53,6 @@ public class AuthContoller {
                     ,HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-    @PostMapping("/logout")
-    public void logout(){
-
     }
 
     @PostMapping("/refresh")

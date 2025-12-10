@@ -5,15 +5,13 @@ import com.example.how_do_crud.domain.user.dto.request.UserUpdateReq;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
-@Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 @Builder
 public class User {
     @Id
@@ -33,8 +31,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     private List<String> roles = new ArrayList<>();
 
-    public void update(UserUpdateReq request){
-        email = request.email();
-        password = request.password();
+    public void update(String email, String password){
+        this.email = email;
+        this.password = password;
     }
 }

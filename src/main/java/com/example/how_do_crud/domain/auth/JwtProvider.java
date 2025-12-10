@@ -17,9 +17,7 @@ import static java.lang.System.getenv;
 @Slf4j
 public class JwtProvider {
 
-    Map<String, String> env = getenv();
-
-    private String secretKey = env.get("KEY"); // 환경변수에서 key 값 가져오기
+    private String secretKey; // 환경변수에서 key 값 가져오기
 
     private final Long accessTokenValidity;
     private final Long refreshTokenValidity;
@@ -29,15 +27,11 @@ public class JwtProvider {
             @Value("${jwt.refresh-token-expiration-days}") Long refreshTokenExpirationDays) {
         this.accessTokenValidity = accessTokenExpirationMinutes * 60 * 1000L;
         this.refreshTokenValidity = refreshTokenExpirationDays * 24 * 60 * 60 * 1000L;
+        this.secretKey = getenv().get("KEY");
     }
 
 
 
-    @PostConstruct
-    protected void init() {
-        // Base64 인코딩
-        secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
-    }
 
     public String createToken(Claims claims, Long tokenValidity){
         Date now = new Date();

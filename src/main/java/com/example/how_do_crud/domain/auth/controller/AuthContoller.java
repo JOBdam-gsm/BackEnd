@@ -52,13 +52,13 @@ public class AuthContoller {
                             .build()
                     ,HttpStatus.OK);
         }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponseDTO> refreshToken(@RequestBody RefreshTokenDTO request){
         String refreshToken = request.refreshToken();
-        if(refreshToken == null || !jwtProvider.validateToken(refreshToken)){ // accessToken 이 유효하지 않을때
+        if(refreshToken == null || !jwtProvider.validateToken(refreshToken)){ // refreshToken 이 유효하지 않을때
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         String username = jwtProvider.getUsername(refreshToken);

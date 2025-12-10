@@ -1,22 +1,25 @@
 package com.example.how_do_crud.domain.user.entity;
 
 
-import com.example.how_do_crud.domain.auth.dto.SignUpDTO;
+import com.example.how_do_crud.domain.user.dto.request.UserUpdateReq;
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
-@NoArgsConstructor
-//@RequiredArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false, unique = true) // null 안되고 중복 X
     private String email;
@@ -25,38 +28,11 @@ public class User {
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
     private List<String> roles = new ArrayList<>();
 
-
-
-    public User(String email, String password, List<String> roles){
+    public void update(String email, String password){
         this.email = email;
         this.password = password;
-        this.roles = roles;
-    }
-    public User(SignUpDTO dto){
-        this.email = dto.getEmail();
-        this.password = dto.getPassword();
-        setRoles(dto.getRoles());
-    }
-
-    public String getEmail(){
-        return email;
-    }
-    public String getPassword(){
-        return password;
-    }
-    public List<String> getRoles(){
-        return roles;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    public void setRoles(String roles){
-        this.roles.add(roles);
     }
 }

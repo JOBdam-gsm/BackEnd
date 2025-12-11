@@ -34,6 +34,8 @@ public class SecurityConfig {
                 // HTTP 요청에 대한 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/sign-up", "/api/auth/login").permitAll()
+                        .requestMatchers("/common/teacher/**").hasRole("TEACHER")//학생이 TEACHER에 들어갈 수 있는가?
+                        .requestMatchers("/common/**").hasRole(("STUDENT"))
                         .anyRequest().authenticated()
                 )
 
